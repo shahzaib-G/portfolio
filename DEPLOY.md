@@ -34,7 +34,7 @@
    PORT=5000
    ```
 6. Click Deploy → Wait for "Live" status
-7. Copy your backend URL: https://your-app-name.onrender.com
+7. Copy your backend URL: https://portfolio-6ajg.onrender.com
 
 ## Step 4 — Deploy Frontend on Netlify
 1. In `frontend/.env` (create this file), add:
