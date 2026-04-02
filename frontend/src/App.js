@@ -1,16 +1,15 @@
-import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from './context/AuthContext';
-import { CircularProgress, Box } from '@mui/material';
-import Header        from './components/Header';
-import Footer        from './components/Footer';
-import Home          from './components/Home';
-import About         from './components/About';
-import Certificates  from './components/Certificates';
-import Experience    from './components/Experience';
-import AdminLogin    from './admin/AdminLogin';
+import { Box, CircularProgress } from '@mui/material';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import AdminDashboard from './admin/AdminDashboard';
+import AdminLogin from './admin/AdminLogin';
 import ResetPassword from './admin/ResetPassword';
+import About from './components/About';
+import Certificates from './components/Certificates';
+import Experience from './components/Experience';
+import Footer from './components/Footer';
+import Header from './components/Header';
+import Home from './components/Home';
+import { useAuth } from './context/AuthContext';
 
 const AdminRoute = ({ children }) => {
   const { admin, loading } = useAuth();
@@ -22,7 +21,7 @@ const AdminRoute = ({ children }) => {
   return admin ? children : <Navigate to="/admin/login" replace />;
 };
 
-const isAdmin = (path) => path.startsWith('/admin');
+// const isAdmin = (path) => path.startsWith('/admin');
 
 function App() {
   const { admin } = useAuth();
