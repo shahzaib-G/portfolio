@@ -7,14 +7,30 @@ const connectDB = require('./config/db');
 const Admin     = require('./models/Admin');
 require('./models/RlMeta'); // register model
 
+// ── Load env ────────────────────────────────────────────────────────────────
 dotenv.config();
+
+// ── Validate required env ───────────────────────────────────────────────────
+const requiredEnv = ['MONGO_URI'];
+const missingEnv = requiredEnv.filter(v => !process.env[v]);
+
+if (missingEnv.length > 0) {
+  console.error(`❌ Missing required ENV variables: ${missingEnv.join(', ')}`);
+  process.exit(1);
+}
 
 const app = express();
 
-// ── Rate limiting ─────────────────────────────────────────────────────────────
-app.use(rateLimit({ windowMs: 15 * 60 * 1000, max: 300, validate: { xForwardedForHeader: false } }));
+// ── Security: Trust proxy (important for Render) ────────────────────────────
+app.set('trust proxy', 1);
 
-// ── CORS ──────────────────────────────────────────────────────────────────────
+// ── Rate limiting ──────────────────────────────────────────────────────────
+app.use(rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+}));
+
+// ── CORS ───────────────────────────────────────────────────────────────────
 const allowed = [
   'https://shahzaibrj.netlify.app',
   'http://localhost:3000',
@@ -22,15 +38,19 @@ const allowed = [
 ].filter(Boolean);
 
 app.use(cors({
-  origin: (origin, cb) => (!origin || allowed.includes(origin)) ? cb(null, true) : cb(new Error('Not allowed by CORS')),
+  origin: (origin, cb) => {
+    if (!origin || allowed.includes(origin)) return cb(null, true);
+    console.warn(`⚠️ Blocked by CORS: ${origin}`);
+    return cb(new Error('Not allowed by CORS'));
+  },
   credentials: true,
 }));
 
-// ── Middleware ─────────────────────────────────────────────────────────────────
+// ── Middleware ─────────────────────────────────────────────────────────────
 app.use(express.json({ limit: '10mb' }));
 app.use(morgan('dev'));
 
-// ── Routes ────────────────────────────────────────────────────────────────────
+// ── Routes ─────────────────────────────────────────────────────────────────
 app.use('/api/auth',         require('./routes/auth'));
 app.use('/api/profile',      require('./routes/profile'));
 app.use('/api/certificates', require('./routes/certificates'));
@@ -40,40 +60,75 @@ app.use('/api/skills',       require('./routes/skills'));
 app.use('/api/contact',      require('./routes/contact'));
 app.use('/api/analytics',    require('./routes/analytics'));
 
-app.get('/api/health', (req, res) => res.json({ status: 'ok', timestamp: new Date() }));
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', timestamp: new Date() });
+});
 
-// ── Seed admin (from env only, no hardcoded data) ─────────────────────────────
+// ── Seed Admin (safe) ───────────────────────────────────────────────────────
 const seedAdmin = async () => {
-  const email = process.env.ADMIN_EMAIL;
-  const pass  = process.env.ADMIN_PASSWORD;
-  if (!email || !pass) { console.warn('⚠️  ADMIN_EMAIL or ADMIN_PASSWORD not set in .env'); return; }
-  const exists = await Admin.findOne({ email: email.toLowerCase() });
-  if (!exists) {
-    await Admin.create({ email, password: pass, name: 'Admin' });
-    console.log('✅ Admin account created →', email);
-  } else {
-    console.log('ℹ️  Admin already exists');
+  try {
+    const email = process.env.ADMIN_EMAIL;
+    const pass  = process.env.ADMIN_PASSWORD;
+
+    if (!email || !pass) {
+      console.warn('⚠️ ADMIN_EMAIL or ADMIN_PASSWORD not set');
+      return;
+    }
+
+    const exists = await Admin.findOne({ email: email.toLowerCase() });
+
+    if (!exists) {
+      await Admin.create({ email, password: pass, name: 'Admin' });
+      console.log(`✅ Admin created → ${email}`);
+    } else {
+      console.log('ℹ️ Admin already exists');
+    }
+  } catch (err) {
+    console.error('❌ Admin seed failed:', err.message);
   }
 };
 
-// ── Global error handler ──────────────────────────────────────────────────────
+// ── Global error handler ────────────────────────────────────────────────────
 app.use((err, req, res, next) => {
-  console.error('💥', err.stack);
-  res.status(err.status || 500).json({ message: err.message || 'Server Error' });
+  console.error('💥 Error:', err.message);
+  res.status(err.status || 500).json({
+    success: false,
+    message: err.message || 'Server Error',
+  });
 });
 
-// ── Start ─────────────────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 5000;
+// ── Handle unhandled errors (VERY IMPORTANT) ────────────────────────────────
+process.on('unhandledRejection', (err) => {
+  console.error('💥 Unhandled Rejection:', err.message);
+  process.exit(1);
+});
 
-(async () => {
+process.on('uncaughtException', (err) => {
+  console.error('💥 Uncaught Exception:', err.message);
+  process.exit(1);
+});
+
+// ── Start Server ────────────────────────────────────────────────────────────
+const PORT = process.env.PORT || 3000;
+
+const startServer = async () => {
   try {
+    console.log('🔄 Connecting to database...');
     await connectDB();
+
+    console.log('🌱 Seeding admin...');
     await seedAdmin();
-    app.listen(PORT, () => console.log(`🚀 API running on port ${PORT}`));
+
+    app.listen(PORT, () => {
+      console.log(`🚀 Server running on port ${PORT}`);
+    });
+
   } catch (err) {
-    console.error('💥 Server start failed:', err.message);
+    console.error('💥 Server failed to start:', err.message);
     process.exit(1);
   }
-})();
+};
+
+startServer();
 
 module.exports = app;
