@@ -1,9 +1,86 @@
 import React, { useEffect, useState } from 'react';
-import { Container, Typography, Box, Chip, Skeleton } from '@mui/material';
+import { Container, Typography, Box, Chip, Skeleton, Grid } from '@mui/material';
 import { motion } from 'framer-motion';
-import { Work, CalendarToday } from '@mui/icons-material';
+import { Work, CalendarToday, ArrowOutward } from '@mui/icons-material';
 import { trackPageVisit, trackPageLeave } from '../utils/tracker';
 import API from '../utils/config';
+
+const FH = "'Syne', sans-serif";
+const FB = "'DM Sans', sans-serif";
+const FM = "'JetBrains Mono', monospace";
+
+const ExperienceCard = ({ item, index }) => {
+  const [hov, setHov] = useState(false);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 30 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      transition={{ duration: 0.65, delay: index * 0.08, ease: [0.23, 1, 0.32, 1] }}
+      onHoverStart={() => setHov(true)}
+      onHoverEnd={() => setHov(false)}
+    >
+      <Box sx={{
+        position: 'relative', mb: 3,
+        p: { xs: 3, md: 4 }, borderRadius: '20px',
+        background: hov ? 'rgba(255,255,255,0.04)' : 'rgba(255,255,255,0.025)',
+        border: hov ? '1px solid rgba(139,92,246,0.3)' : '1px solid rgba(255,255,255,0.06)',
+        boxShadow: hov ? '0 16px 48px rgba(0,0,0,0.35)' : 'none',
+        transition: 'all 0.3s cubic-bezier(0.23,1,0.32,1)',
+      }}>
+        {/* Left accent bar */}
+        <Box sx={{
+          position: 'absolute', left: 0, top: '20%', bottom: '20%', width: 3,
+          borderRadius: '0 2px 2px 0',
+          background: hov ? 'linear-gradient(180deg,#6d28d9,#22d3ee)' : 'rgba(139,92,246,0.2)',
+          transition: 'background 0.3s',
+        }} />
+
+        <Grid container spacing={2} alignItems="flex-start">
+          <Grid item xs={12} sm={8}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 0.5 }}>
+              <Typography sx={{ fontFamily: FH, fontWeight: 700, fontSize: { xs: '1rem', md: '1.15rem' }, color: '#f1f5f9', letterSpacing: '-0.02em' }}>
+                {item.role}
+              </Typography>
+              {item.current && (
+                <Box sx={{ px: 1.2, py: 0.3, borderRadius: '20px', background: 'rgba(34,197,94,0.1)', border: '1px solid rgba(34,197,94,0.22)' }}>
+                  <Typography sx={{ fontFamily: FM, fontSize: '0.62rem', color: '#4ade80', fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Current</Typography>
+                </Box>
+              )}
+            </Box>
+            <Typography sx={{ fontFamily: FB, fontWeight: 600, color: '#8b5cf6', fontSize: '0.9rem', mb: 0.5 }}>
+              {item.company}
+            </Typography>
+          </Grid>
+          <Grid item xs={12} sm={4} sx={{ display: 'flex', justifyContent: { sm: 'flex-end' } }}>
+            <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.8, px: 1.6, py: 0.5, borderRadius: '8px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <CalendarToday sx={{ fontSize: 11, color: '#475569' }} />
+              <Typography sx={{ fontFamily: FM, fontSize: '0.72rem', color: '#475569', letterSpacing: '0.04em' }}>
+                {item.startDate || ''}{item.current ? ' – Present' : item.endDate ? ` – ${item.endDate}` : ''}
+              </Typography>
+            </Box>
+          </Grid>
+        </Grid>
+
+        {item.description && (
+          <Typography sx={{ fontFamily: FB, color: '#64748b', fontSize: '0.9rem', lineHeight: 1.85, mt: 2 }}>
+            {item.description}
+          </Typography>
+        )}
+
+        {item.techStack?.length > 0 && (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.6, mt: 2.5 }}>
+            {item.techStack.map(t => (
+              <Box key={t} sx={{ px: 1.4, py: 0.35, borderRadius: '6px', fontSize: '0.72rem', fontFamily: FB, fontWeight: 500, color: '#94a3b8', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
+                {t}
+              </Box>
+            ))}
+          </Box>
+        )}
+      </Box>
+    </motion.div>
+  );
+};
 
 export default function Experience() {
   const [items,   setItems]   = useState([]);
@@ -11,76 +88,50 @@ export default function Experience() {
 
   useEffect(() => {
     trackPageVisit('/experience');
-    fetch(`${API}/experiences`).then(r=>r.json()).then(d=>setItems(Array.isArray(d)?d:[])).catch(()=>{}).finally(()=>setLoading(false));
+    fetch(`${API}/experiences`)
+      .then(r => r.json())
+      .then(d => setItems(Array.isArray(d) ? d : []))
+      .catch(() => {})
+      .finally(() => setLoading(false));
     return () => trackPageLeave('/experience');
   }, []);
 
   return (
-    <Box sx={{ background:'#0a0f1e', minHeight:'100vh', pt:14, pb:12, position:'relative', overflow:'hidden' }}>
-      <Box sx={{ position:'fixed', top:'30%', left:'-5%', width:'35vw', height:'35vw', maxWidth:500, background:'radial-gradient(circle,rgba(124,92,255,0.08) 0%,transparent 70%)', filter:'blur(60px)', pointerEvents:'none' }} />
+    <Box sx={{ background: '#09090b', minHeight: '100vh', pt: { xs: 12, md: 14 }, pb: 12, position: 'relative', overflow: 'hidden' }}>
+      {/* bg glows */}
+      <Box sx={{ position: 'fixed', top: '20%', right: '-8%', width: '40vw', height: '40vw', maxWidth: 550, background: 'radial-gradient(circle,rgba(109,40,217,0.09) 0%,transparent 65%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
+      <Box sx={{ position: 'fixed', bottom: '15%', left: '-8%', width: '40vw', height: '40vw', maxWidth: 520, background: 'radial-gradient(circle,rgba(34,211,238,0.07) 0%,transparent 65%)', filter: 'blur(80px)', pointerEvents: 'none', zIndex: 0 }} />
 
-      <Container maxWidth="lg">
-        <motion.div initial={{ opacity:0, y:30 }} animate={{ opacity:1, y:0 }} transition={{ duration:0.7 }}>
-          <Typography sx={{ fontFamily:"'Orbitron'", fontWeight:900, fontSize:{ xs:'2rem', md:'2.8rem' }, textAlign:'center',
-            background:'linear-gradient(135deg,#fff,#a78bfa)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent', mb:1 }}>
+      <Container maxWidth="lg" sx={{ position: 'relative', zIndex: 1 }}>
+        {/* Header */}
+        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, mb: 2 }}>
+            <Box sx={{ fontFamily: FM, fontSize: '0.72rem', fontWeight: 500, color: '#475569', letterSpacing: '0.08em' }}>— 02</Box>
+            <Box sx={{ width: 60, height: 1, background: 'rgba(255,255,255,0.06)' }} />
+          </Box>
+          <Typography sx={{ fontFamily: FH, fontWeight: 800, fontSize: { xs: '2.4rem', md: '3.5rem' }, letterSpacing: '-0.04em', lineHeight: 1, mb: 1.5, background: 'linear-gradient(135deg, #f1f5f9 0%, #c4b5fd 60%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
             Experience
           </Typography>
-          <Box sx={{ width:60, height:3, background:'linear-gradient(90deg,#7c5cff,#00d4ff)', borderRadius:2, mx:'auto', mb:8 }} />
+          <Typography sx={{ fontFamily: FB, color: '#475569', fontSize: '1rem', mb: 8, maxWidth: 420 }}>
+            Where I've worked and what I've built.
+          </Typography>
         </motion.div>
 
+        {/* List */}
         {loading ? (
-          [1,2,3].map(k=><Skeleton key={k} variant="rounded" height={180} sx={{ bgcolor:'rgba(255,255,255,0.04)', borderRadius:'20px', mb:3 }} />)
+          [1, 2, 3].map(k => (
+            <Skeleton key={k} variant="rounded" height={180} sx={{ bgcolor: 'rgba(255,255,255,0.03)', borderRadius: '20px', mb: 3 }} />
+          ))
         ) : items.length === 0 ? (
-          <Box sx={{ textAlign:'center', py:10 }}>
-            <Work sx={{ fontSize:64, color:'rgba(124,92,255,0.2)', mb:2 }} />
-            <Typography sx={{ color:'rgba(224,230,255,0.25)' }}>Experience will appear here once added via Admin.</Typography>
+          <Box sx={{ textAlign: 'center', py: 12 }}>
+            <Work sx={{ fontSize: 56, color: 'rgba(139,92,246,0.15)', mb: 2 }} />
+            <Typography sx={{ fontFamily: FB, color: '#475569' }}>Experience will appear here once added via Admin.</Typography>
           </Box>
         ) : (
-          <Box sx={{ position:'relative' }}>
-            {/* Timeline line */}
-            <Box sx={{ position:'absolute', left:{ xs:16, md:'50%' }, top:0, bottom:0, width:2,
-              background:'linear-gradient(180deg,#7c5cff,#00d4ff)', opacity:0.25, transform:{ md:'translateX(-50%)' } }} />
-
-            {items.map((item, i) => {
-              const isLeft = i % 2 === 0;
-              return (
-                <motion.div key={item._id} initial={{ opacity:0, x: isLeft ? -40 : 40 }} whileInView={{ opacity:1, x:0 }}
-                  viewport={{ once:true }} transition={{ duration:0.7, delay: i*0.1 }}>
-                  <Box sx={{
-                    display:'flex', justifyContent:{ md: isLeft ? 'flex-start' : 'flex-end' },
-                    mb:4, pl:{ xs:6, md:0 },
-                    pr:{ md: isLeft ? '52%' : 0 },
-                    pl2:{ md: isLeft ? 0 : '52%' },
-                    ...(isLeft ? { pr:{ md:'52%' } } : { pl:{ md:'52%' } }),
-                  }}>
-                    {/* Dot */}
-                    <Box sx={{ position:'absolute', left:{ xs:8, md:'calc(50% - 8px)' }, width:16, height:16, borderRadius:'50%',
-                      background:'linear-gradient(135deg,#7c5cff,#00d4ff)', boxShadow:'0 0 20px rgba(124,92,255,0.6)',
-                      mt:3, zIndex:1 }} />
-
-                    <Box sx={{ p:{ xs:3, md:3.5 }, borderRadius:'20px', background:'rgba(255,255,255,0.03)', backdropFilter:'blur(20px)',
-                      border:'1px solid rgba(124,92,255,0.15)', width:{ md:'100%' },
-                      transition:'all 0.3s', '&:hover':{ border:'1px solid rgba(124,92,255,0.4)', boxShadow:'0 16px 40px rgba(124,92,255,0.12)', transform:'translateY(-4px)' } }}>
-                      <Box sx={{ display:'flex', justifyContent:'space-between', alignItems:'flex-start', flexWrap:'wrap', gap:1, mb:1 }}>
-                        <Box>
-                          <Typography sx={{ fontWeight:700, fontSize:'1.05rem', color:'#e0e6ff', fontFamily:"'Space Grotesk'" }}>{item.role}</Typography>
-                          <Typography sx={{ fontWeight:600, color:'#7c5cff', fontSize:'0.88rem' }}>{item.company}</Typography>
-                        </Box>
-                        <Chip icon={<CalendarToday sx={{ fontSize:'11px !important', color:'#00d4ff !important' }} />}
-                          label={`${item.startDate || ''}${item.current ? ' – Present' : item.endDate ? ` – ${item.endDate}` : ''}`}
-                          size="small" sx={{ background:'rgba(0,212,255,0.07)', color:'rgba(224,230,255,0.6)', fontSize:'0.72rem', border:'1px solid rgba(0,212,255,0.15)' }} />
-                      </Box>
-                      {item.description && <Typography sx={{ color:'rgba(224,230,255,0.55)', fontSize:'0.87rem', lineHeight:1.8, mt:1.5 }}>{item.description}</Typography>}
-                      {item.techStack?.length > 0 && (
-                        <Box sx={{ display:'flex', flexWrap:'wrap', gap:0.5, mt:2 }}>
-                          {item.techStack.map(t=><Chip key={t} label={t} size="small" sx={{ background:'rgba(124,92,255,0.08)', color:'#a78bfa', fontSize:'0.68rem', border:'1px solid rgba(124,92,255,0.18)' }} />)}
-                        </Box>
-                      )}
-                    </Box>
-                  </Box>
-                </motion.div>
-              );
-            })}
+          <Box>
+            {items.map((item, i) => (
+              <ExperienceCard key={item._id} item={item} index={i} />
+            ))}
           </Box>
         )}
       </Container>

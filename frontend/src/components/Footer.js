@@ -1,64 +1,118 @@
 import React, { useEffect, useState } from 'react';
-import { Box, Container, Typography, IconButton, Divider } from '@mui/material';
+import { Box, Container, Typography, IconButton } from '@mui/material';
 import { GitHub, LinkedIn, WhatsApp, Instagram, Twitter, Email } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
 import API from '../utils/config';
 
+const FB = "'DM Sans', sans-serif";
+const FH = "'Syne', sans-serif";
+
 export default function Footer() {
   const [profile, setProfile] = useState(null);
-  useEffect(() => { fetch(`${API}/profile`).then(r=>r.json()).then(setProfile).catch(()=>{}); }, []);
+  useEffect(() => { fetch(`${API}/profile`).then(r => r.json()).then(setProfile).catch(() => {}); }, []);
 
   const socials = [
-    { key:'github',    icon:<GitHub />,    color:'#a78bfa' },
-    { key:'linkedin',  icon:<LinkedIn />,  color:'#00d4ff' },
-    { key:'whatsapp',  icon:<WhatsApp />,  color:'#25d366' },
-    { key:'instagram', icon:<Instagram />, color:'#e1306c' },
-    { key:'twitter',   icon:<Twitter />,   color:'#1da1f2' },
+    { key: 'github',    icon: <GitHub fontSize="small" />,    color: '#8b5cf6' },
+    { key: 'linkedin',  icon: <LinkedIn fontSize="small" />,  color: '#22d3ee' },
+    { key: 'whatsapp',  icon: <WhatsApp fontSize="small" />,  color: '#22c55e' },
+    { key: 'instagram', icon: <Instagram fontSize="small" />, color: '#ec4899' },
+    { key: 'twitter',   icon: <Twitter fontSize="small" />,   color: '#60a5fa' },
   ].filter(s => profile?.[s.key]);
 
   return (
-    <Box component="footer" sx={{
-      py: 6, position:'relative', zIndex:1,
-      background:'rgba(10,15,30,0.95)', backdropFilter:'blur(20px)',
-      borderTop:'1px solid rgba(124,92,255,0.1)',
-    }}>
+    <Box
+      component="footer"
+      sx={{
+        borderTop: '1px solid rgba(255,255,255,0.05)',
+        background: 'rgba(9,9,11,0.97)',
+        backdropFilter: 'blur(16px)',
+        py: { xs: 5, md: 6 },
+      }}
+    >
       <Container maxWidth="xl">
-        <Box sx={{ display:'flex', flexDirection:{ xs:'column', md:'row' }, justifyContent:'space-between', alignItems:'center', gap:3 }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { md: 'center' }, gap: 4 }}>
+
+          {/* Brand */}
           <Box>
-            <Typography sx={{ fontFamily:"'Orbitron'", fontWeight:900, fontSize:'1.3rem',
-              background:'linear-gradient(135deg,#7c5cff,#00d4ff)', WebkitBackgroundClip:'text', WebkitTextFillColor:'transparent' }}>
-              {profile?.name || 'Portfolio'}
-            </Typography>
-            {profile?.title && <Typography sx={{ color:'rgba(224,230,255,0.4)', fontSize:'0.82rem', mt:0.5 }}>{profile.title}</Typography>}
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
+              <Box sx={{
+                width: 32, height: 32, borderRadius: '9px', flexShrink: 0,
+                background: 'linear-gradient(135deg,#6d28d9,#22d3ee)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontFamily: FH, fontWeight: 800, fontSize: '0.75rem', color: '#fff',
+              }}>
+                {(profile?.name || 'P').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+              </Box>
+              <Typography sx={{ fontFamily: FH, fontWeight: 700, fontSize: '0.95rem', color: '#f1f5f9', letterSpacing: '-0.02em' }}>
+                {profile?.name || 'Portfolio'}
+              </Typography>
+            </Box>
+            {profile?.title && (
+              <Typography sx={{ fontFamily: FB, color: '#475569', fontSize: '0.82rem', ml: 0.5 }}>
+                {profile.title}
+              </Typography>
+            )}
           </Box>
 
-          <Box sx={{ display:'flex', gap:1 }}>
+          {/* Nav links */}
+          <Box sx={{ display: 'flex', gap: { xs: 2, md: 3 }, flexWrap: 'wrap' }}>
+            {[['Home', '/'], ['About', '/about'], ['Experience', '/experience'], ['Certificates', '/certificates']].map(([l, p]) => (
+              <Box
+                key={p}
+                component={Link} to={p}
+                sx={{
+                  fontFamily: FB, fontSize: '0.85rem', color: '#475569', textDecoration: 'none',
+                  transition: 'color 0.2s',
+                  '&:hover': { color: '#94a3b8' },
+                }}
+              >
+                {l}
+              </Box>
+            ))}
+          </Box>
+
+          {/* Socials */}
+          <Box sx={{ display: 'flex', gap: 1 }}>
             {socials.map(s => (
-              <IconButton key={s.key} href={profile[s.key]} target="_blank" size="small" sx={{
-                color:'rgba(224,230,255,0.4)', border:'1px solid rgba(255,255,255,0.07)',
-                '&:hover':{ color:s.color, borderColor:s.color, background:`${s.color}15` }, transition:'all 0.3s',
-              }}>{s.icon}</IconButton>
+              <Box
+                key={s.key}
+                component="a" href={profile[s.key]} target="_blank" rel="noopener"
+                sx={{
+                  width: 36, height: 36, borderRadius: '9px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#475569', border: '1px solid rgba(255,255,255,0.06)',
+                  transition: 'all 0.22s ease',
+                  '&:hover': { color: s.color, borderColor: `${s.color}44`, background: `${s.color}0f`, transform: 'translateY(-2px)' },
+                }}
+              >
+                {s.icon}
+              </Box>
             ))}
             {profile?.email && (
-              <IconButton href={`mailto:${profile.email}`} size="small" sx={{
-                color:'rgba(224,230,255,0.4)', border:'1px solid rgba(255,255,255,0.07)',
-                '&:hover':{ color:'#a78bfa', borderColor:'#a78bfa', background:'rgba(124,92,255,0.1)' }, transition:'all 0.3s',
-              }}><Email /></IconButton>
+              <Box
+                component="a" href={`mailto:${profile.email}`}
+                sx={{
+                  width: 36, height: 36, borderRadius: '9px',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  color: '#475569', border: '1px solid rgba(255,255,255,0.06)',
+                  transition: 'all 0.22s ease',
+                  '&:hover': { color: '#c4b5fd', borderColor: 'rgba(139,92,246,0.35)', background: 'rgba(139,92,246,0.08)', transform: 'translateY(-2px)' },
+                }}
+              >
+                <Email fontSize="small" />
+              </Box>
             )}
           </Box>
         </Box>
 
-        <Divider sx={{ my:3, borderColor:'rgba(124,92,255,0.08)' }} />
-
-        <Box sx={{ display:'flex', flexDirection:{ xs:'column', sm:'row' }, justifyContent:'space-between', alignItems:'center', gap:2 }}>
-          <Typography sx={{ color:'rgba(224,230,255,0.25)', fontSize:'0.78rem' }}>
+        {/* Bottom bar */}
+        <Box sx={{ mt: 5, pt: 3, borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
+          <Typography sx={{ fontFamily: FB, color: '#2e2e40', fontSize: '0.78rem' }}>
             © {new Date().getFullYear()} {profile?.name || ''}. All rights reserved.
           </Typography>
-          <Box sx={{ display:'flex', gap:3 }}>
-            {[['Home','/'],['About','/about'],['Experience','/experience'],['Certificates','/certificates']].map(([l,p]) => (
-              <Typography key={p} component={Link} to={p} sx={{ color:'rgba(224,230,255,0.3)', fontSize:'0.78rem', textDecoration:'none', '&:hover':{ color:'#a78bfa' }, transition:'color 0.3s' }}>{l}</Typography>
-            ))}
-          </Box>
+          <Typography sx={{ fontFamily: FB, color: '#2e2e40', fontSize: '0.78rem' }}>
+            Built with React & ❤️
+          </Typography>
         </Box>
       </Container>
     </Box>
