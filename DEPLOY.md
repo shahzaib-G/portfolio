@@ -1,73 +1,98 @@
 # Portfolio v2 — Deploy Guide
 
-## Step 1 — MongoDB Atlas (free)
+## Overview
+- **Backend** → Render (Node + Express + MongoDB)
+- **Frontend** → Netlify (React, auto-deploys on every git push)
+- **Database** → MongoDB Atlas (free tier)
+- **GitHub** → https://github.com/shahzaib-G/portfolio
+
+---
+
+## Step 1 — MongoDB Atlas
 1. Go to https://cloud.mongodb.com → create free cluster
-2. Create DB user with password
-3. Network Access → Add IP → 0.0.0.0/0 (allow all)
+2. Create a DB user with a password
+3. Network Access → Add IP `0.0.0.0/0` (allow all)
 4. Get connection string: `mongodb+srv://user:pass@cluster.mongodb.net/portfolio`
 
-## Step 2 — Gmail App Password
+---
+
+## Step 2 — Gmail App Password (for contact form emails)
 1. Go to https://myaccount.google.com/security
 2. Enable 2-Step Verification
-3. Search "App passwords" → create one for "Portfolio Backend"
+3. Search "App passwords" → create one labelled "Portfolio"
 4. Copy the 16-char password (no spaces)
 
+---
+
 ## Step 3 — Deploy Backend on Render
-1. Push ONLY the `backend/` folder to a GitHub repo
-   (or push the whole project and set root directory to `backend`)
-2. Go to https://render.com → New Web Service
-3. Connect your GitHub repo
-4. Settings:
-   - Root Directory: `backend`
-   - Build Command: `npm install`
-   - Start Command: `npm start`
-   - Node version: 18
-5. Environment Variables → Add ALL of these:
+
+Your backend is already live at: **https://portfolio-6ajg.onrender.com**
+
+If you need to redeploy or update env vars:
+1. Go to https://render.com → your `portfolio-backend` service
+2. Environment → ensure ALL of these are set:
    ```
-   MONGO_URI=mongodb+srv://...
-   JWT_SECRET=any_long_random_string_here_min_32chars
-   ADMIN_EMAIL=shahzaibnasir3011@gmail.com
-   ADMIN_PASSWORD=your_secure_admin_password
-   GMAIL_USER=shahzaibnasir3011@gmail.com
-   GMAIL_APP_PASSWORD=your_16_char_app_password
-   FRONTEND_URL=https://shahzaibrj.netlify.app
-   PORT=5000
+   MONGO_URI         = mongodb+srv://...
+   JWT_SECRET        = any_long_random_string_here_min_32chars
+   ADMIN_EMAIL       = your@email.com
+   ADMIN_PASSWORD    = your_secure_admin_password
+   GMAIL_USER        = your@gmail.com
+   GMAIL_APP_PASSWORD= your_16_char_app_password
+   FRONTEND_URL      = https://YOUR_SITE.netlify.app
+   NODE_ENV          = production
    ```
-6. Click Deploy → Wait for "Live" status
-7. Copy your backend URL: https://portfolio-6ajg.onrender.com
+3. Render auto-deploys on every push to `main`
+
+> **Note:** Do NOT add PORT — Render injects it automatically.
+
+---
 
 ## Step 4 — Deploy Frontend on Netlify
-1. In `frontend/.env` (create this file), add:
-   ```
-   REACT_APP_API_URL=https://your-app-name.onrender.com/api
-   ```
-2. Push the `frontend/` folder to GitHub
-3. Go to https://netlify.com → New Site from Git
-4. Settings:
+
+`netlify.toml` is already configured — Netlify reads it automatically.
+
+### First-time setup:
+1. Go to https://netlify.com → **Add new site → Import an existing project**
+2. Connect to GitHub → choose `shahzaib-G/portfolio`
+3. Netlify auto-detects `netlify.toml` settings:
    - Base directory: `frontend`
    - Build command: `npm run build`
-   - Publish directory: `frontend/build`
-5. Environment Variables → add:
+   - Publish directory: `build`
+4. **Before deploying**, go to **Site settings → Environment variables** and add:
    ```
-   REACT_APP_API_URL=https://your-app-name.onrender.com/api
+   REACT_APP_API_URL = https://portfolio-6ajg.onrender.com/api
    ```
-6. Deploy → Your site is live!
+5. Click **Deploy site**
 
-## Step 5 — First Login
-1. Go to https://yoursite.netlify.app/admin/login
-2. Login with ADMIN_EMAIL and ADMIN_PASSWORD from your env vars
-3. Go to Profile → fill in your name, bio, title, skills, etc.
-4. Add projects, skills, experience, certificates
-5. Portfolio shows your data instantly — visitors see it live!
+### Every push after that:
+```
+git push origin main
+```
+Netlify auto-deploys. Done.
 
-## RL System — How It Works
-- Every time a visitor views or clicks a project → backend logs engagement
-- After EVERY tracking event, the RL engine (epsilon-greedy bandit) re-ranks all projects automatically
-- Projects with more engagement (views, clicks, GitHub clicks, live clicks) move to the top
-- 15% exploration rate ensures newer projects get a chance to be seen
-- Zero Python needed — it's all Node.js, all automatic
+---
+
+## Step 5 — Update Render CORS after Netlify gives you a URL
+
+Once Netlify gives you your URL (e.g. `https://shahzaibrj.netlify.app`):
+1. Go to Render → your backend service → Environment
+2. Set `FRONTEND_URL = https://your-site-name.netlify.app`
+3. Render redeploys automatically
+
+> The backend already accepts **any** `*.netlify.app` URL for deploy previews.
+
+---
+
+## Step 6 — First Login & Fill Your Data
+1. Go to `https://YOUR_SITE.netlify.app/admin/login`
+2. Login with `ADMIN_EMAIL` / `ADMIN_PASSWORD` from your env vars
+3. Fill in: Profile, Skills, Projects, Experience, Certificates
+4. Your portfolio updates live — no redeployment needed
+
+---
 
 ## Notes
-- Render free tier sleeps after 15min inactivity (cold start ~30s)
-- Upgrade to Render Starter ($7/mo) for always-on
-- All images stored as base64 in MongoDB — no Cloudinary needed
+- Render free tier **sleeps after 15 min** inactivity (cold start ~30s on first visit)
+- Upgrade to Render Starter ($7/mo) to keep it always-on
+- All images are stored as base64 in MongoDB — no Cloudinary needed
+- Projects are auto-ranked by engagement (views, clicks) via the RL system

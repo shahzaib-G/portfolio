@@ -131,7 +131,10 @@ const allowed = [
 
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || allowed.includes(origin)) return cb(null, true);
+    if (!origin) return cb(null, true);
+    if (allowed.includes(origin)) return cb(null, true);
+    // Allow any *.netlify.app deploy preview URL
+    if (/^https:\/\/[a-z0-9-]+\.netlify\.app$/.test(origin)) return cb(null, true);
     cb(new Error('Not allowed by CORS'));
   },
   credentials: true,
