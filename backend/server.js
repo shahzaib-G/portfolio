@@ -144,6 +144,17 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(morgan('dev'));
 
+/* Cache-Control for public read-only endpoints (stale-while-revalidate = serve cache while fetching fresh) */
+const cache = (maxAge, swr = maxAge * 2) => (req, res, next) => {
+  if (req.method === 'GET') res.set('Cache-Control', `public, max-age=${maxAge}, stale-while-revalidate=${swr}`);
+  next();
+};
+app.use('/api/profile',      cache(300));   // 5 min — changes rarely
+app.use('/api/skills',       cache(600));   // 10 min
+app.use('/api/certificates', cache(600));   // 10 min
+app.use('/api/experiences',  cache(600));   // 10 min
+app.use('/api/projects',     cache(60));    // 1 min — RL re-ranks frequently
+
 app.get('/', (req, res) => {
   res.send('Portfolio backend is running');
 });

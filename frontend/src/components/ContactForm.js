@@ -1,32 +1,35 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Box, TextField, Typography, Alert, CircularProgress } from '@mui/material';
 import { Send, CheckCircle } from '@mui/icons-material';
 import { motion } from 'framer-motion';
+import { useTheme } from '@mui/material/styles';
 import API from '../utils/config';
 
-const FB = "'DM Sans', sans-serif";
-const FM = "'JetBrains Mono', monospace";
-
-const inputSx = {
-  '& .MuiOutlinedInput-root': {
-    color: '#e2e8f0',
-    fontFamily: FB,
-    fontSize: '0.95rem',
-    background: 'rgba(255,255,255,0.03)',
-    borderRadius: '12px',
-    '& fieldset': { borderColor: 'rgba(255,255,255,0.08)' },
-    '&:hover fieldset': { borderColor: 'rgba(139,92,246,0.35)' },
-    '&.Mui-focused fieldset': { borderColor: '#8b5cf6', borderWidth: '1.5px' },
-  },
-  '& .MuiInputLabel-root': { color: '#475569', fontFamily: FB, fontSize: '0.9rem' },
-  '& .MuiInputLabel-root.Mui-focused': { color: '#a78bfa' },
-  '& .MuiInputLabel-root.Mui-error': { color: '#f87171' },
-};
+const FB = "'Inter', sans-serif";
 
 export default function ContactForm() {
+  const theme   = useTheme();
+  const isLight = theme.palette.mode === 'light';
   const [form,    setForm]    = useState({ name: '', email: '', subject: '', message: '' });
   const [status,  setStatus]  = useState(null);
   const [loading, setLoading] = useState(false);
+
+  const accent = isLight ? '#4f46e5' : '#818cf8';
+
+  const inputSx = {
+    '& .MuiOutlinedInput-root': {
+      fontFamily: FB,
+      fontSize: '0.95rem',
+      background: isLight ? '#ffffff' : 'rgba(255,255,255,0.03)',
+      borderRadius: '10px',
+      '& fieldset': { borderColor: theme.palette.divider },
+      '&:hover fieldset': { borderColor: accent },
+      '&.Mui-focused fieldset': { borderColor: accent, borderWidth: '1.5px' },
+    },
+    '& .MuiInputLabel-root': { color: theme.palette.text.secondary, fontFamily: FB, fontSize: '0.9rem' },
+    '& .MuiInputLabel-root.Mui-focused': { color: accent },
+    '& .MuiOutlinedInput-input': { color: theme.palette.text.primary },
+  };
 
   const handleChange = (e) => setForm(f => ({ ...f, [e.target.name]: e.target.value }));
 
@@ -52,32 +55,48 @@ export default function ContactForm() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30 }}
+      initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
-      transition={{ duration: 0.7 }}
+      transition={{ duration: 0.45 }}
     >
       <Box
         component="form"
         onSubmit={handleSubmit}
         sx={{
           p: { xs: 3, sm: 4, md: 5 },
-          borderRadius: '24px',
-          background: 'rgba(255,255,255,0.025)',
-          border: '1px solid rgba(255,255,255,0.07)',
-          boxShadow: '0 8px 40px rgba(0,0,0,0.25)',
+          borderRadius: '20px',
+          background: theme.palette.background.paper,
+          border: `1px solid ${theme.palette.divider}`,
+          boxShadow: isLight ? '0 4px 24px rgba(0,0,0,0.07)' : '0 8px 40px rgba(0,0,0,0.25)',
         }}
       >
-        {/* Success state */}
         {status === 'success' && (
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
             <Box sx={{ textAlign: 'center', py: 6 }}>
-              <CheckCircle sx={{ fontSize: 52, color: '#22c55e', mb: 2 }} />
-              <Typography sx={{ fontFamily: "'Syne', sans-serif", fontWeight: 700, fontSize: '1.3rem', color: '#f1f5f9', mb: 1 }}>Message sent!</Typography>
-              <Typography sx={{ fontFamily: FB, color: '#475569', fontSize: '0.9rem', mb: 4 }}>Thanks for reaching out — I'll get back to you soon.</Typography>
+              <CheckCircle sx={{ fontSize: 52, color: isLight ? '#16a34a' : '#4ade80', mb: 2 }} />
+              <Typography sx={{
+                fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 700,
+                fontSize: '1.3rem', color: theme.palette.text.primary, mb: 1,
+              }}>
+                Message sent!
+              </Typography>
+              <Typography sx={{ fontFamily: FB, color: theme.palette.text.secondary, fontSize: '0.9rem', mb: 4 }}>
+                Thanks for reaching out. I will get back to you soon.
+              </Typography>
               <Box
-                component="button" type="button" onClick={() => setStatus(null)}
-                sx={{ px: 3, py: 1, borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)', background: 'transparent', color: '#94a3b8', fontFamily: FB, fontSize: '0.875rem', cursor: 'pointer', '&:hover': { background: 'rgba(255,255,255,0.05)' }, transition: 'all 0.2s' }}
+                component="button"
+                type="button"
+                onClick={() => setStatus(null)}
+                sx={{
+                  px: 3, py: 1, borderRadius: '10px',
+                  border: `1px solid ${theme.palette.divider}`,
+                  background: 'transparent',
+                  color: theme.palette.text.secondary,
+                  fontFamily: FB, fontSize: '0.875rem', cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  '&:hover': { background: isLight ? 'rgba(0,0,0,0.04)' : 'rgba(255,255,255,0.06)' },
+                }}
               >
                 Send another
               </Box>
@@ -88,11 +107,10 @@ export default function ContactForm() {
         {status !== 'success' && (
           <>
             {status === 'error' && (
-              <Alert severity="error" sx={{ mb: 3, background: 'rgba(239,68,68,0.08)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.2)', borderRadius: '12px', fontFamily: FB, '& .MuiAlert-icon': { color: '#f87171' } }}>
+              <Alert severity="error" sx={{ mb: 3, borderRadius: '10px', fontFamily: FB }}>
                 Something went wrong. Please try again.
               </Alert>
             )}
-
             <Box sx={{ display: 'flex', gap: 2, mb: 2.5, flexDirection: { xs: 'column', sm: 'row' } }}>
               <TextField fullWidth label="Name"  name="name"  value={form.name}  onChange={handleChange} required sx={inputSx} />
               <TextField fullWidth label="Email" name="email" value={form.email} onChange={handleChange} required type="email" sx={inputSx} />
@@ -105,19 +123,21 @@ export default function ContactForm() {
               type="submit"
               disabled={loading}
               sx={{
-                width: '100%', py: 1.85, px: 4, borderRadius: '12px',
+                width: '100%', py: 1.85, px: 4, borderRadius: '10px',
                 border: 'none', cursor: loading ? 'not-allowed' : 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 1.5,
                 fontFamily: FB, fontWeight: 700, fontSize: '1rem', color: '#fff',
-                background: 'linear-gradient(135deg, #6d28d9, #0e7490)',
-                boxShadow: '0 8px 28px rgba(109,40,217,0.38)',
+                background: accent,
+                boxShadow: isLight
+                  ? '0 4px 14px rgba(79,70,229,0.32)'
+                  : '0 4px 14px rgba(129,140,248,0.3)',
                 opacity: loading ? 0.7 : 1,
-                transition: 'all 0.3s ease',
-                '&:hover:not(:disabled)': { boxShadow: '0 14px 40px rgba(109,40,217,0.55)', transform: 'translateY(-2px)' },
+                transition: 'filter 0.2s ease',
+                '&:hover:not(:disabled)': { filter: 'brightness(1.08)' },
               }}
             >
               {loading
-                ? <><CircularProgress size={18} sx={{ color: 'rgba(255,255,255,0.8)' }} /> Sending…</>
+                ? <><CircularProgress size={18} sx={{ color: 'rgba(255,255,255,0.8)' }} /> Sending...</>
                 : <><Send sx={{ fontSize: 18 }} /> Send Message</>
               }
             </Box>

@@ -1,54 +1,67 @@
-import React, { useEffect, useState } from 'react';
-import { Box, Container, Typography, IconButton } from '@mui/material';
+﻿import React, { useEffect, useState } from 'react';
+import { Box, Container, Typography } from '@mui/material';
 import { GitHub, LinkedIn, WhatsApp, Instagram, Twitter, Email } from '@mui/icons-material';
 import { Link } from 'react-router-dom';
+import { useTheme } from '@mui/material/styles';
 import API from '../utils/config';
 
-const FB = "'DM Sans', sans-serif";
-const FH = "'Syne', sans-serif";
+const FB = "'Inter', sans-serif";
+const FH = "'Plus Jakarta Sans', sans-serif";
 
 export default function Footer() {
+  const theme   = useTheme();
+  const isLight = theme.palette.mode === 'light';
   const [profile, setProfile] = useState(null);
-  useEffect(() => { fetch(`${API}/profile`).then(r => r.json()).then(setProfile).catch(() => {}); }, []);
+
+  useEffect(() => {
+    fetch(`${API}/profile`).then(r => r.json()).then(setProfile).catch(() => {});
+  }, []);
 
   const socials = [
-    { key: 'github',    icon: <GitHub fontSize="small" />,    color: '#8b5cf6' },
-    { key: 'linkedin',  icon: <LinkedIn fontSize="small" />,  color: '#22d3ee' },
-    { key: 'whatsapp',  icon: <WhatsApp fontSize="small" />,  color: '#22c55e' },
-    { key: 'instagram', icon: <Instagram fontSize="small" />, color: '#ec4899' },
-    { key: 'twitter',   icon: <Twitter fontSize="small" />,   color: '#60a5fa' },
+    { key: 'github',    icon: <GitHub fontSize="small" /> },
+    { key: 'linkedin',  icon: <LinkedIn fontSize="small" /> },
+    { key: 'whatsapp',  icon: <WhatsApp fontSize="small" /> },
+    { key: 'instagram', icon: <Instagram fontSize="small" /> },
+    { key: 'twitter',   icon: <Twitter fontSize="small" /> },
   ].filter(s => profile?.[s.key]);
+
+  const accent    = isLight ? '#4f46e5' : '#818cf8';
+  const accentBg  = isLight ? 'rgba(79,70,229,0.07)' : 'rgba(129,140,248,0.1)';
+  const accentBdr = isLight ? 'rgba(79,70,229,0.18)' : 'rgba(129,140,248,0.22)';
+  const initials  = (profile?.name || 'P').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
   return (
     <Box
       component="footer"
       sx={{
-        borderTop: '1px solid rgba(255,255,255,0.05)',
-        background: 'rgba(9,9,11,0.97)',
-        backdropFilter: 'blur(16px)',
+        borderTop: `1px solid ${theme.palette.divider}`,
+        background: theme.palette.background.paper,
         py: { xs: 5, md: 6 },
+        transition: 'background 0.3s ease',
       }}
     >
       <Container maxWidth="xl">
-        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', md: 'row' }, justifyContent: 'space-between', alignItems: { md: 'center' }, gap: 4 }}>
-
+        <Box sx={{
+          display: 'flex', flexDirection: { xs: 'column', md: 'row' },
+          justifyContent: 'space-between', alignItems: { md: 'center' }, gap: 4,
+        }}>
           {/* Brand */}
           <Box>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, mb: 1 }}>
               <Box sx={{
                 width: 32, height: 32, borderRadius: '9px', flexShrink: 0,
-                background: 'linear-gradient(135deg,#6d28d9,#22d3ee)',
+                background: 'linear-gradient(135deg,#4f46e5,#0891b2)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontFamily: FH, fontWeight: 800, fontSize: '0.75rem', color: '#fff',
               }}>
-                {(profile?.name || 'P').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                {initials}
               </Box>
-              <Typography sx={{ fontFamily: FH, fontWeight: 700, fontSize: '0.95rem', color: '#f1f5f9', letterSpacing: '-0.02em' }}>
+              <Typography sx={{ fontFamily: FH, fontWeight: 700, fontSize: '0.95rem', color: theme.palette.text.primary, letterSpacing: '-0.02em' }}>
                 {profile?.name || 'Portfolio'}
               </Typography>
             </Box>
             {profile?.title && (
-              <Typography sx={{ fontFamily: FB, color: '#475569', fontSize: '0.82rem', ml: 0.5 }}>
+              <Typography sx={{ fontFamily: FB, color: theme.palette.text.secondary, fontSize: '0.82rem', ml: 0.5 }}>
                 {profile.title}
               </Typography>
             )}
@@ -58,12 +71,11 @@ export default function Footer() {
           <Box sx={{ display: 'flex', gap: { xs: 2, md: 3 }, flexWrap: 'wrap' }}>
             {[['Home', '/'], ['About', '/about'], ['Experience', '/experience'], ['Certificates', '/certificates']].map(([l, p]) => (
               <Box
-                key={p}
-                component={Link} to={p}
+                key={p} component={Link} to={p}
                 sx={{
-                  fontFamily: FB, fontSize: '0.85rem', color: '#475569', textDecoration: 'none',
-                  transition: 'color 0.2s',
-                  '&:hover': { color: '#94a3b8' },
+                  fontFamily: FB, fontSize: '0.85rem', color: theme.palette.text.secondary,
+                  textDecoration: 'none', transition: 'color 0.18s',
+                  '&:hover': { color: theme.palette.text.primary },
                 }}
               >
                 {l}
@@ -80,9 +92,10 @@ export default function Footer() {
                 sx={{
                   width: 36, height: 36, borderRadius: '9px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#475569', border: '1px solid rgba(255,255,255,0.06)',
-                  transition: 'all 0.22s ease',
-                  '&:hover': { color: s.color, borderColor: `${s.color}44`, background: `${s.color}0f`, transform: 'translateY(-2px)' },
+                  color: theme.palette.text.secondary,
+                  border: `1px solid ${theme.palette.divider}`,
+                  transition: 'all 0.18s ease',
+                  '&:hover': { color: accent, borderColor: accentBdr, background: accentBg },
                 }}
               >
                 {s.icon}
@@ -94,9 +107,10 @@ export default function Footer() {
                 sx={{
                   width: 36, height: 36, borderRadius: '9px',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#475569', border: '1px solid rgba(255,255,255,0.06)',
-                  transition: 'all 0.22s ease',
-                  '&:hover': { color: '#c4b5fd', borderColor: 'rgba(139,92,246,0.35)', background: 'rgba(139,92,246,0.08)', transform: 'translateY(-2px)' },
+                  color: theme.palette.text.secondary,
+                  border: `1px solid ${theme.palette.divider}`,
+                  transition: 'all 0.18s ease',
+                  '&:hover': { color: accent, borderColor: accentBdr, background: accentBg },
                 }}
               >
                 <Email fontSize="small" />
@@ -106,12 +120,16 @@ export default function Footer() {
         </Box>
 
         {/* Bottom bar */}
-        <Box sx={{ mt: 5, pt: 3, borderTop: '1px solid rgba(255,255,255,0.04)', display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: 'center', gap: 2 }}>
-          <Typography sx={{ fontFamily: FB, color: '#2e2e40', fontSize: '0.78rem' }}>
-            © {new Date().getFullYear()} {profile?.name || ''}. All rights reserved.
+        <Box sx={{
+          mt: 5, pt: 3, borderTop: `1px solid ${theme.palette.divider}`,
+          display: 'flex', flexDirection: { xs: 'column', sm: 'row' },
+          justifyContent: 'space-between', alignItems: 'center', gap: 2,
+        }}>
+          <Typography sx={{ fontFamily: FB, color: theme.palette.text.secondary, fontSize: '0.78rem', opacity: 0.55 }}>
+            {`Â© ${new Date().getFullYear()} ${profile?.name || ''}. All rights reserved.`}
           </Typography>
-          <Typography sx={{ fontFamily: FB, color: '#2e2e40', fontSize: '0.78rem' }}>
-            Built with React & ❤️
+          <Typography sx={{ fontFamily: FB, color: theme.palette.text.secondary, fontSize: '0.78rem', opacity: 0.55 }}>
+            Built with React
           </Typography>
         </Box>
       </Container>

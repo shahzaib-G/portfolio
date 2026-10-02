@@ -1,51 +1,70 @@
-import { Box, CircularProgress } from '@mui/material';
+import React, { lazy, Suspense } from 'react';
+import { Box, CircularProgress, useTheme } from '@mui/material';
 import { Navigate, Route, Routes } from 'react-router-dom';
-import AdminDashboard from './admin/AdminDashboard';
-import AdminLogin from './admin/AdminLogin';
-import ResetPassword from './admin/ResetPassword';
-import About from './components/About';
-import Certificates from './components/Certificates';
-import Experience from './components/Experience';
-import Footer from './components/Footer';
-import Header from './components/Header';
-import Home from './components/Home';
 import { useAuth } from './context/AuthContext';
+import Header from './components/Header';
+import Footer from './components/Footer';
 
-const AdminRoute = ({ children }) => {
-  const { admin, loading } = useAuth();
-  if (loading) return (
-    <Box sx={{ display:'flex', justifyContent:'center', alignItems:'center', height:'100vh', background:'#0a0f1e' }}>
-      <CircularProgress sx={{ color:'#7c5cff' }} />
+/* ── Lazy-loaded route chunks ──────────────────────────────────────────── */
+const Home         = lazy(() => import('./components/Home'));
+const About        = lazy(() => import('./components/About'));
+const Certificates = lazy(() => import('./components/Certificates'));
+const Experience   = lazy(() => import('./components/Experience'));
+const AdminLogin       = lazy(() => import('./admin/AdminLogin'));
+const ResetPassword    = lazy(() => import('./admin/ResetPassword'));
+const AdminDashboard   = lazy(() => import('./admin/AdminDashboard'));
+
+/* ── Route-level loading fallback ─────────────────────────────────────── */
+const PageLoader = () => {
+  const theme = useTheme();
+  return (
+    <Box sx={{
+      display: 'flex', justifyContent: 'center', alignItems: 'center',
+      height: '80vh', background: theme.palette.background.default,
+    }}>
+      <CircularProgress size={36} sx={{ color: theme.palette.mode === 'light' ? '#4f46e5' : '#818cf8' }} thickness={2.5} />
     </Box>
   );
+};
+
+/* ── Admin guard ───────────────────────────────────────────────────────── */
+const AdminRoute = ({ children }) => {
+  const { admin, loading } = useAuth();
+  if (loading) return <PageLoader />;
   return admin ? children : <Navigate to="/admin/login" replace />;
 };
 
-// const isAdmin = (path) => path.startsWith('/admin');
-
 function App() {
   const { admin } = useAuth();
+  const theme = useTheme();
+
   return (
-    <div>
+    <Box sx={{ background: theme.palette.background.default, minHeight: '100vh', transition: 'background 0.3s ease' }}>
+      {/* Header — hidden on admin routes */}
       <Routes>
         <Route path="/admin/*" element={null} />
         <Route path="*" element={<Header />} />
       </Routes>
-      <Routes>
-        <Route path="/"             element={<Home />} />
-        <Route path="/about"        element={<About />} />
-        <Route path="/certificates" element={<Certificates />} />
-        <Route path="/experience"   element={<Experience />} />
-        <Route path="/admin/login"  element={admin ? <Navigate to="/admin" replace /> : <AdminLogin />} />
-        <Route path="/admin/reset-password/:token" element={<ResetPassword />} />
-        <Route path="/admin/*"      element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
+
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/"             element={<Home />} />
+          <Route path="/about"        element={<About />} />
+          <Route path="/certificates" element={<Certificates />} />
+          <Route path="/experience"   element={<Experience />} />
+          <Route path="/admin/login"  element={admin ? <Navigate to="/admin" replace /> : <AdminLogin />} />
+          <Route path="/admin/reset-password/:token" element={<ResetPassword />} />
+          <Route path="/admin/*"      element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="*"             element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
+
+      {/* Footer — hidden on admin routes */}
       <Routes>
         <Route path="/admin/*" element={null} />
         <Route path="*" element={<Footer />} />
       </Routes>
-    </div>
+    </Box>
   );
 }
 
